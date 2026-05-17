@@ -53,3 +53,14 @@ For sure.
 ##### APIs
 Spotify and Apple Music. 
 
+
+# Tutorial
+
+## Mongo DB
+Create the database (already seeded for demo purposes)\
+`cd db`\
+`sudo docker compose up -d`
+
+To access the docker mongo shell\
+`sudo docker exec -it MONGO_CONTAINER bash`
+
