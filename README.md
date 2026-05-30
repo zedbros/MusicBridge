@@ -64,3 +64,10 @@ Create the database (already seeded for demo purposes)\
 To access the docker mongo shell\
 `sudo docker exec -it MONGO_CONTAINER bash`
 
+
+# Exam test test.js
+in backend/ => run `node test.js` => new terminal => `curl -X GET http://localhost:3000/test` => check node terminal for 3 logs.
+
+
+# Authentication
+Got a great tutorial from this website: `https://supertokens.com/blog/building-a-login-screen-with-react-and-bootstrap`
