@@ -6,6 +6,7 @@ import { Route, Routes } from "react-router-dom"
 
 // Login
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
+// import Local from 'passport-local';
 
 function App() {
   return (
@@ -38,11 +39,97 @@ function Home() {
 }
 
 function SignUp(){
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
+
+    if (!nickname) newErrors.nickname = 'Nickname is required';
+    // TODO
+    // else if (nickname == TODO EXISTING NICKNAME) newErrors.nickname = 'Unique nickname is required';
+
+    return newErrors;
+  };
+
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+    } else {
+      setErrors({});
+      console.log('Sign up attempted with:', { email, password, nickname });
+      // Here you would typically send a request to your server
+    }
+  };
+
   return (
-  <>
-    <h1>Sign up</h1>
-  </>
-  )
+    <div className='login-wrapper'>
+      <div className='login-form-container'>
+        <h2 className="sign-title">Sign up</h2>
+        <Form onSubmit={handleSubmit} className="sign-form">
+
+
+          <Form.Group className="sign-box" controlId="formBasicEmail">
+            <Form.Control.Feedback type="invalid">
+              {errors.email}
+            </Form.Control.Feedback>
+            <Form.Label>Email address</Form.Label>
+            <Form.Control className='sign-text-box'
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              isInvalid={!!errors.email}
+            />
+          </Form.Group>
+
+          <Form.Group className="sign-box" controlId="formBasicPassword">
+            <Form.Control.Feedback type="invalid">
+              {errors.password}
+            </Form.Control.Feedback>
+            <Form.Label >Password</Form.Label>
+            <Form.Control className='sign-text-box'
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              isInvalid={!!errors.email}
+            />
+          </Form.Group>
+
+          <Form.Group className="sign-box" controlId="formBasicPassword">
+            <Form.Control.Feedback type="invalid">
+              {errors.nickname}
+            </Form.Control.Feedback>
+            <Form.Label >Nickname</Form.Label>
+            <Form.Control className='sign-text-box'
+              type="string"
+              placeholder="Nickname"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              isInvalid={!!errors.email}
+            />
+          </Form.Group>
+
+
+
+          <Button variant="primary" type="submit" className="sign-button">
+            Sell your soul
+          </Button>
+        </Form>
+      </div>
+    </div>
+  );
 }
 
 

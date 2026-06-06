@@ -1,3 +1,0 @@
-# syntax=docker/dockerfile:1
-FROM mongo:latest
-COPY db.sql /docker-entrypoint-initdb.d/
