@@ -52,11 +52,15 @@
 
 
 
+
+
+
+
 .login-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  /* min-height: 100vh; */
   padding: 20px;
 }
 
@@ -66,8 +70,8 @@
   padding: 30px;
   border-radius: 20px;
   box-shadow: 0 0 10px rgba(200, 24, 24, 0.1);
-  background-color: #e2cbff;
-  color: rgb(51, 8, 153);
+  background-color: #ff9090;
+  color: rgb(64, 12, 12);
 }
 
 .login-title {
@@ -91,6 +95,57 @@
 }
 
 .login-text-box {
-  background-color: rgb(247, 149, 129);
+  background-color: rgb(205, 167, 160);
   size: 50%;
+  text-align: left;
+  margin-left: 10px;
+}
+
+
+
+
+
+
+.sign-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* min-height: 100vh; */
+  padding: 20px;
+}
+
+.sign-form-container {
+  width: 100%;
+  max-width: 1000px;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(200, 24, 24, 0.1);
+  background-color: #dbacff;
+  color: rgb(51, 8, 153);
+}
+
+.sign-title {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 200%;
+}
+
+.sign-form {
+  margin-bottom: 15px;
+}
+
+.sign-box {
+  padding: 3px;
+  text-align: left;
+}
+
+.sign-text-box {
+  text-align: left;
+  width: 150px;
+  height: 20px;
+  margin-left: 10px;
+}
+
+.sign-button {
+  margin-top: 10px;
 }

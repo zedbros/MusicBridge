@@ -93,8 +93,9 @@ function SignUp(){
   };
 
   return (
-    <div className='login-wrapper'>
-      <div className='login-form-container'>
+    <>
+    <div className='sign-wrapper'>
+      <div className='sign-form-container'>
         <h2 className="sign-title">Sign up</h2>
         <Form onSubmit={handleSubmit} className="sign-form">
 
@@ -106,7 +107,7 @@ function SignUp(){
             <Form.Label >Nickname</Form.Label>
             <Form.Control className='sign-text-box'
               type="string"
-              placeholder="Nickname"
+              placeholder="enter unique"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               isInvalid={!!errors.nickname}
@@ -121,7 +122,7 @@ function SignUp(){
             <Form.Label>Email address</Form.Label>
             <Form.Control className='sign-text-box'
               type="email"
-              placeholder="Email"
+              placeholder="enter valid email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               isInvalid={!!errors.email}
@@ -135,7 +136,7 @@ function SignUp(){
             <Form.Label >Password</Form.Label>
             <Form.Control className='sign-text-box'
               type="password"
-              placeholder="Password"
+              placeholder="min length 3"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               isInvalid={!!errors.password}
@@ -150,6 +151,8 @@ function SignUp(){
         </Form>
       </div>
     </div>
+    <button onClick={event => window.location.href='/'}>Go back</button>
+    </>
   );
 }
 
@@ -198,6 +201,7 @@ function Login(){
   };
 
   return (
+    <>
     <div className='login-wrapper'>
       <div className='login-form-container'>
         <h2 className="login-title">Login</h2>
@@ -237,6 +241,8 @@ function Login(){
         </Form>
       </div>
     </div>
+    <button onClick={event => window.location.href='/'}>Go back</button>
+    </>
   );
 }
 
