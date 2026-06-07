@@ -1,10 +1,13 @@
-require("dotenv").config()
+require("dotenv").config({path:"../.env"})
 
 const express = require("express");
 const { connectDB } = require("../db/MongoDB")
 
 const app = express();
 app.use(express.json());
+
+const authRoutes = require("./routes/auth");
+app.use("/api/auth", authRoutes);
 
 async function startServer(){
   try{

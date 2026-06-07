@@ -53,22 +53,36 @@ function SignUp(){
     else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
 
     if (!nickname) newErrors.nickname = 'Nickname is required';
-    // TODO
-    // else if (nickname == TODO EXISTING NICKNAME) newErrors.nickname = 'Unique nickname is required';
 
     return newErrors;
   };
 
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-    } else {
-      setErrors({});
-      console.log('Sign up attempted with:', { email, password, nickname });
-      // Here you would typically send a request to your server
+      return;
+    } 
+    try {
+      const res = await fetch("/api/auth/signUp/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ nickname, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ server: data.error });
+      } else {
+        window.location.href = `/${nickname}/dashboard` // where it redirects you to
+        // window.location.href = `/` // where it redirects you to
+      }
+    }
+    catch (e) {
+      setErrors({ server: "Could not reach the server."});
     }
   };
 
@@ -77,6 +91,21 @@ function SignUp(){
       <div className='login-form-container'>
         <h2 className="sign-title">Sign up</h2>
         <Form onSubmit={handleSubmit} className="sign-form">
+
+
+          <Form.Group className="sign-box" controlId="formBasicNickname">
+            <Form.Control.Feedback type="invalid">
+              {errors.nickname}
+            </Form.Control.Feedback>
+            <Form.Label >Nickname</Form.Label>
+            <Form.Control className='sign-text-box'
+              type="string"
+              placeholder="Nickname"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              isInvalid={!!errors.nickname}
+            />
+          </Form.Group>
 
 
           <Form.Group className="sign-box" controlId="formBasicEmail">
@@ -103,26 +132,12 @@ function SignUp(){
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              isInvalid={!!errors.email}
-            />
-          </Form.Group>
-
-          <Form.Group className="sign-box" controlId="formBasicPassword">
-            <Form.Control.Feedback type="invalid">
-              {errors.nickname}
-            </Form.Control.Feedback>
-            <Form.Label >Nickname</Form.Label>
-            <Form.Control className='sign-text-box'
-              type="string"
-              placeholder="Nickname"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              isInvalid={!!errors.email}
+              isInvalid={!!errors.password}
             />
           </Form.Group>
 
 
-
+          {errors.server && <Alert variant="danger">{errors.server}</Alert>} {/* shows error if nickname or email already exists in the DB. */}
           <Button variant="primary" type="submit" className="sign-button">
             Sell your soul
           </Button>
@@ -133,40 +148,51 @@ function SignUp(){
 }
 
 
-// import 
-// export const login = async (email, password) => {
-//   try {
-//     const response = await axios.post(`${API_URL}/users`, { email, password });
-//     return response.data;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+
 
 function Login(){
-  const [email, setEmail] = useState('');
+  const [nick_email, setNickEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
     const newErrors = {};
-    if (!email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+    if (!nick_email) newErrors.nick_email = 'Email is required';
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
     return newErrors;
   };
 
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-    } else {
-      setErrors({});
-      console.log('Login attempted with:', { email, password });
-      // Here you would typically send a request to your server
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/login/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ nick_email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors({ server: data.error });
+      } else {
+
+        // TODO GET THE NICKNAME SO THAT THE HREF IS SET TO THE NAME AND NOT THE
+        // EMAIL ADDRESS IF THAT IS WHAT IS USED TO LOGIN.
+
+        // window.location.href = `/${nick_email}/home` // where it redirects you to
+        window.location.href = `/` 
+      }
+    }
+    catch (e) {
+      setErrors({ server: "Could not reach the server."});
     }
   };
 
@@ -176,16 +202,16 @@ function Login(){
         <h2 className="login-title">Login</h2>
         <Form onSubmit={handleSubmit} className="login-form">
           <Form.Group className="login-box" controlId="formBasicEmail">
-            <Form.Label>Email address</Form.Label>
+            <Form.Label>nickname or email</Form.Label>
             <Form.Control className='login-text-box'
-              type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              isInvalid={!!errors.email}
+              type="string"
+              placeholder="Enter nickname or email"
+              value={nick_email}
+              onChange={(e) => setNickEmail(e.target.value)}
+              isInvalid={!!errors.nick_email}
             />
             <Form.Control.Feedback type="invalid">
-              {errors.email}
+              {errors.nick_email}
             </Form.Control.Feedback>
           </Form.Group>
 
@@ -196,13 +222,14 @@ function Login(){
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              isInvalid={!!errors.email}
+              isInvalid={!!errors.password}
             />
             <Form.Control.Feedback type="invalid">
               {errors.password}
             </Form.Control.Feedback>
           </Form.Group>
 
+          {errors.server && <Alert variant="danger">{errors.server}</Alert>} {/* shows error if nickname or email already exists in the DB. */}
           <Button variant="primary" type="submit" className="login-button">
             Login
           </Button>
