@@ -80,7 +80,6 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-
     res.json({ token, nickname: user.nickname });
   } catch (err) {
     console.error(err);

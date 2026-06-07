@@ -161,7 +161,7 @@ function Login(){
 
   const validateForm = () => {
     const newErrors = {};
-    if (!nick_email) newErrors.nick_email = 'Email is required';
+    if (!nick_email) newErrors.nick_email = 'Email or nickname is required';
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
     return newErrors;
@@ -189,11 +189,8 @@ function Login(){
       } else {
         localStorage.setItem("token", data.token);
         localStorage.setItem("nickname", data.nickname);
-
-
-        // TODO GET THE NICKNAME SO THAT THE HREF IS SET TO THE NAME AND NOT THE
-        // EMAIL ADDRESS IF THAT IS WHAT IS USED TO LOGIN.
-        window.location.href = `/user/${nick_email}/home` // where it redirects you to
+        
+        window.location.href = `/user/${data.nickname}/home` // where it redirects you to
       }
     }
     catch (e) {
