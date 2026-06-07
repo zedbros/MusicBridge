@@ -31,7 +31,16 @@ router.post("/signUp", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10); // Hashes password
     await users.insertOne({ email, password: hashedPassword, nickname });
 
-    res.status(201).json({ message: "Account created successfully." });
+    const user = await users.findOne({nickname: nickname});
+
+    const token = jwt.sign(
+      { id: user._id, nickname: nickname },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    console.log("Account created successfully.");
+    res.json({ token, nickname });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error." });
@@ -56,9 +65,9 @@ router.post("/login", async (req, res) => {
         ]
     });
         
-    console.log("1")
-    console.log(user)
-    console.log("2")
+    // console.log("1")
+    // console.log(user)
+    // console.log("2")
     if (!user)
       return res.status(401).json({ error: "Invalid nickname or email." });
 
@@ -78,5 +87,26 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Server error." });
   }
 });
+
+router.get("/user/:nickname", async (req, res) => {});
+
+router.post("/user/:nickname/edit", requireAuth, async (req, res) => {
+  if (req.user.nickname !== req.params.nickname)
+    return res.status(403).json({ error: "Forbidden." });
+});
+
+function requireAuth(req, res, next){
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({erro: "You haven't provided any token"})
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid or expired token." });
+  }
+}
 
 module.exports = router;

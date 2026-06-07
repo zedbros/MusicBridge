@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 import React from 'react'
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, useParams } from "react-router-dom"
 
 // Login
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
@@ -11,14 +11,18 @@ import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Welcome />} />
       <Route path="/Login" element={<Login />} />
       <Route path="/SignUp" element={<SignUp />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/user/:nickname/home" element={<UserHome />} />
+      <Route path="/user/:nickname/edit" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
+      <Route path="/four" element={<Four />} />
     </Routes>
   )
 }
 
-function Home() {
+function Welcome() {
   return (
     <>
       <h1>Music Bridge</h1>
@@ -77,7 +81,10 @@ function SignUp(){
       if (!res.ok) {
         setErrors({ server: data.error });
       } else {
-        window.location.href = `/${nickname}/dashboard` // where it redirects you to
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("nickname", data.nickname);
+
+        window.location.href = `/user/${nickname}/home` // where it redirects you to
         // window.location.href = `/` // where it redirects you to
       }
     }
@@ -147,9 +154,6 @@ function SignUp(){
   );
 }
 
-
-
-
 function Login(){
   const [nick_email, setNickEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -183,12 +187,13 @@ function Login(){
       if (!res.ok) {
         setErrors({ server: data.error });
       } else {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("nickname", data.nickname);
+
 
         // TODO GET THE NICKNAME SO THAT THE HREF IS SET TO THE NAME AND NOT THE
         // EMAIL ADDRESS IF THAT IS WHAT IS USED TO LOGIN.
-
-        // window.location.href = `/${nick_email}/home` // where it redirects you to
-        window.location.href = `/` 
+        window.location.href = `/user/${nick_email}/home` // where it redirects you to
       }
     }
     catch (e) {
@@ -237,6 +242,62 @@ function Login(){
       </div>
     </div>
   );
+}
+
+function Home() {
+  return (
+    <>
+      <h1>Music Bridge</h1>
+      <div className="icon">
+        homepage<p></p>
+      </div>
+    </>
+  )
+}
+
+function UserHome() {
+  const { nickname } = useParams();
+  const isOwner = localStorage.getItem("nickname") === nickname;
+
+  return (
+    <div>
+      <h1>{nickname}'s page</h1>
+      {isOwner && (
+        <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
+          Edit my page
+        </button>
+      )}
+    </div>
+  );
+}
+
+function UserEdit() {
+  const { nickname } = useParams();
+
+  return (
+    <div>
+      <h1>Edit your page, {nickname}</h1>
+    </div>
+  );
+}
+
+function ProtectedRoute({ children }) {
+  const { nickname } = useParams();
+  const storedNickname = localStorage.getItem("nickname");
+  const token = localStorage.getItem("token");
+
+  if (!token || storedNickname !== nickname){
+    return window.location.href='/four'
+  }
+  return children;
+}
+
+function Four() {
+  return (
+    <>
+      <h1>ACCESS DENIED</h1>
+    </>
+  )
 }
 
 export default App
