@@ -27,13 +27,12 @@ function Welcome() {
     <>
       <h1>Music Bridge</h1>
       <div className="icon">
+        <a>
+          <img className="logo" onClick={event => window.location.href='/home'} src="src/res/musicBridgeIdeaIcon.jpg"/>
+        </a><br></br>
         yippee<p></p>
         We make a musik.<br></br>
-        <a>
-          <img src="src/res/musicBridgeIdeaIcon.jpg"/>
-        </a>
       </div>
-      <br></br>
       <div className="cred_table">        
         <button onClick={event => window.location.href='/signUp'}>Sign Up</button>
         <button onClick={event => window.location.href='/login' }>Log In</button>
@@ -189,7 +188,7 @@ function Login(){
       } else {
         localStorage.setItem("token", data.token);
         localStorage.setItem("nickname", data.nickname);
-        
+
         window.location.href = `/user/${data.nickname}/home` // where it redirects you to
       }
     }

@@ -5,7 +5,7 @@
   text-align: center;
 }
 
-.logo.react:hover {
+.logo:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
@@ -37,10 +37,17 @@
   color: black;
   text-align: center;
 }
+
+
+.logo {
+  height: 100px;
+}
 .cred_table {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
 }
 
 
