@@ -1,12 +1,10 @@
 require("dotenv").config({path:"../../.env"})
-
 const express = require("express");
 const { getDB } = require("../../db/MongoDB");
-
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const router = express.Router();
+const passport = require("../middleware/passport")
 
 // POST /api/auth/signUp
 router.post("/signUp", async (req, res) => {
@@ -18,7 +16,6 @@ router.post("/signUp", async (req, res) => {
   try {
     const db = getDB();
     const users = db.collection("users");
-
 
     const nickname_exists = await users.findOne({ nickname });
     if (nickname_exists)
@@ -49,42 +46,51 @@ router.post("/signUp", async (req, res) => {
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
-  const { nick_email, password } = req.body;
-
-  if (!nick_email || !password)
-    return res.status(400).json({ error: "All fields are required." });
-
-  try {
-    const db = getDB();
-    const users = db.collection("users");
-
-    const user = await users.findOne({
-        $or: [
-            {nickname: nick_email},
-            {email: nick_email}
-        ]
-    });
-        
-    // console.log("1")
-    // console.log(user)
-    // console.log("2")
-    if (!user)
-      return res.status(401).json({ error: "Invalid nickname or email." });
-
-    const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(401).json({ error: "Invalid password." });
+  passport.authenticate("local", { session: false }, (err, user, info) => {
+    if (err) return res.status(500).json({ error: "Server error." });
+    if (!user) return res.status(401).json({ error: info?.message || "Login failed." });
 
     const token = jwt.sign(
       { id: user._id, nickname: user.nickname },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+
     res.json({ token, nickname: user.nickname });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error." });
-  }
+  })(req, res); // there was res, next in this parenthesis incase there is an error that occures here.
+  // const { nick_email, password } = req.body;
+
+  // if (!nick_email || !password)
+  //   return res.status(400).json({ error: "All fields are required." });
+
+  // try {
+  //   const db = getDB();
+  //   const users = db.collection("users");
+
+  //   const user = await users.findOne({
+  //       $or: [
+  //           {nickname: nick_email},
+  //           {email: nick_email}
+  //       ]
+  //   });
+    
+  //   if (!user)
+  //     return res.status(401).json({ error: "Invalid nickname or email." });
+
+  //   const match = await bcrypt.compare(password, user.password);
+  //   if (!match)
+  //     return res.status(401).json({ error: "Invalid password." });
+
+  //   const token = jwt.sign(
+  //     { id: user._id, nickname: user.nickname },
+  //     process.env.JWT_SECRET,
+  //     { expiresIn: "7d" }
+  //   );
+  //   res.json({ token, nickname: user.nickname });
+  // } catch (err) {
+  //   console.error(err);
+  //   res.status(500).json({ error: "Server error." });
+  // }
 });
 
 router.get("/user/:nickname", async (req, res) => {});

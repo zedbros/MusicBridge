@@ -7,7 +7,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    server: { proxy: { "/api": `http://localhost:${env.PORT}`,},},
+    server: { 
+      proxy: { 
+        "/api": `http://localhost:${env.PORT}`,
+        "/graphql": `http://localhost:${env.PORT}`
+      },
+    },
   }
-}
-)
+})

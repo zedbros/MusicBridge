@@ -2,11 +2,32 @@ import { useState } from 'react'
 import './App.css'
 
 import React from 'react'
-import { Route, Routes, useParams } from "react-router-dom"
+import { Route, Routes, useParams, Navigate } from "react-router-dom"
 
 // Login
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 // import Local from 'passport-local';
+
+import { useQuery, useMutation } from "@apollo/client/react";
+import { gql } from "@apollo/client";
+// import useMutations from "@apollo/client/react";
+
+const GET_USER = gql`
+  query GetUser($nickname: String!) {
+    getUser(nickname: $nickname) {
+      nickname
+      bio
+    }
+  }
+`;
+const UPDATE_PROFILE = gql`
+  mutation UpdateProfile($bio: String!) {
+    updateProfile(bio: $bio) {
+      nickname
+      bio
+    }
+  }
+`;
 
 function App() {
   return (
@@ -259,11 +280,19 @@ function Home() {
 
 function UserHome() {
   const { nickname } = useParams();
-  const isOwner = localStorage.getItem("nickname") === nickname;
+  const isOwner = localStorage.getItem("nickname") === nickname
+
+  const { loading, error, data } = useQuery(GET_USER, {
+    variables: { nickname },
+  });
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading profile: </p>;
 
   return (
     <div>
-      <h1>{nickname}'s page</h1>
+      <h1>Welcome to {data.getUser.nickname}'s page</h1>
+      <p>{data.getUser.bio}</p>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
           Edit my page
@@ -275,11 +304,41 @@ function UserHome() {
 
 function UserEdit() {
   const { nickname } = useParams();
+  const [bio, setBio] = useState("");
+    // re-runs GET_USER to update the page after the mutation is accepted
+    // this is for the reactives queries and mutations
+  const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE, {
+    update(cache, { data: { updateProfile } }) {
+      cache.writeQuery({
+        query: GET_USER,
+        variables: { nickname },
+        data: { getUser: updateProfile },
+      });
+    }
+  });
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading profile: </p>;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Here is eez")
+    await updateProfile({ variables: { bio } });
+    console.log("Bio updated successfully")
+    window.location.href = `/user/${localStorage.getItem("nickname")}/home`;
+  };
 
   return (
-    <div>
-      <h1>Edit your page, {nickname}</h1>
-    </div>
+    <>
+      <div>
+        <h1>Edit your page, {nickname}</h1>
+      </div>
+      <form onSubmit={handleSubmit}>
+        <textarea value={bio} onChange={e => setBio(e.target.value)} />
+        <button type="submit" disabled={loading}>Save</button>
+        {error && <p>{error.message}</p>}
+      </form>
+    </>
   );
 }
 
@@ -289,7 +348,7 @@ function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
 
   if (!token || storedNickname !== nickname){
-    return window.location.href='/four'
+    return <Navigate to="/four"replace />;
   }
   return children;
 }
