@@ -23,6 +23,10 @@ const resolvers = {
       const db = getDB();
       return db.collection("users").findOne({ nickname: context.user.nickname });
     },
+    getAllUsers: async () => {
+      const db = getDB();
+      return db.collection("users").find({}).toArray();
+    },
   },
   Mutation: {
     updateProfile: async (_, { bio }, context) => {
@@ -32,6 +36,7 @@ const resolvers = {
         { nickname: context.user.nickname },
         { $set: { bio } }
       );
+      console.log("Bio updated successfully")
       return db.collection("users").findOne({ nickname: context.user.nickname });
     }
   },

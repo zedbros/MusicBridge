@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 import React from 'react'
-import { Route, Routes, useParams, Navigate } from "react-router-dom"
+import { Route, Routes, useParams, Navigate, Link } from "react-router-dom"
 
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 
@@ -23,6 +23,11 @@ const UPDATE_PROFILE = gql`
       nickname
       bio
     }
+  }
+`;
+const GET_ALL_USERS = gql`
+  query {
+    getAllUsers { nickname }
   }
 `;
 
@@ -265,11 +270,24 @@ function Login(){
 }
 
 function Home() {
+  const { loading, error, data } = useQuery(GET_ALL_USERS);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading users.</p>;
+
   return (
     <>
       <h1>Music Bridge</h1>
-      <div className="icon">
-        homepage<p></p>
+      <img className="logo" onClick={event => window.location.href='/'} src="src/res/musicBridgeIdeaIcon.jpg"/>
+      <h3>homepage</h3>
+      <div className="home-users">
+        {data.getAllUsers.map(user => (
+          <div className="home-user-box" key={user.nickname}
+            onClick={() => window.location.href = `/user/${user.nickname}/home`}
+          >
+          {user.nickname}
+          </div>
+        ))}
       </div>
     </>
   )
@@ -287,15 +305,29 @@ function UserHome() {
   if (error) return <p>Error loading profile: </p>;
 
   return (
+    <>
+    <header>
+      <a>
+        <img className="logo" onClick={event => window.location.href='/home'} src="/src/res/musicBridgeIdeaIcon.jpg"/>
+      </a><br></br>
+    </header>
     <div>
-      <h1>Welcome to {data.getUser.nickname}'s page</h1>
-      <p>{data.getUser.bio}</p>
+      <h2>Welcome to {data.getUser.nickname}'s page</h2>
+      <img src="/src/res/smol_2B.png" width={100}/>
+      <p>Bio --- {data.getUser.bio}</p>
+      <p>Favourite genres ---</p>
+      <button onClick={() => window.location.href=`/user/${nickname}/playlists`}>
+          Playlists
+      </button>
+      <br></br>
+      <br></br>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
           Edit my page
         </button>
       )}
     </div>
+    </>
   );
 }
 
@@ -319,9 +351,8 @@ function UserEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Here is eez")
     await updateProfile({ variables: { bio } });
-    console.log("Bio updated successfully")
+    // console.log("Bio updated successfully")
     window.location.href = `/user/${localStorage.getItem("nickname")}/home`;
   };
 
@@ -354,6 +385,7 @@ function Four() {
   return (
     <>
       <h1>ACCESS DENIED</h1>
+      <img className="logo" onClick={event => window.location.href='/'} src="src/res/musicBridgeIdeaIcon.jpg"/>
     </>
   )
 }

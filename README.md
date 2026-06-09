@@ -29,7 +29,7 @@ private).
 
 - Playlists -> PL_id, name, pfp, songs_fk, viewability(pub/unl/pri) 
 
-- ![](notes/1/Screenshot_20260223_170009.png)
+- ![](notes/1/db_diagram.png)
 
 #### Architecture client/serveur, transport des données avec GraphQL 
 - Viewing, modifying and adding playlists. 

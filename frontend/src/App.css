@@ -7,6 +7,7 @@
 
 .logo:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
+  cursor: pointer;
 }
 
 @keyframes logo-spin {
@@ -32,6 +33,29 @@
 }
 
 /* My added classes */
+
+h1 {
+  text-shadow: 4px 3px 2px #AB16CE;
+}
+
+.home-users {
+  overflow-y: "auto";
+  max-height: "80vh";
+}
+
+.home-user-box {
+  /* width: fit-content; */
+  color: cyan;
+  font-family: 'Courier New', Courier, monospace;
+  text-shadow: 4px 3px 2px #AB16CE;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.home-user-box:hover {
+  /* filter: drop-shadow(0 0 2em black); */
+  box-shadow: 0px 0px 4px 2px #AB16CE;
+}
 
 .icon {
   color: black;
