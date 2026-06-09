@@ -4,13 +4,10 @@ import './App.css'
 import React from 'react'
 import { Route, Routes, useParams, Navigate } from "react-router-dom"
 
-// Login
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
-// import Local from 'passport-local';
 
 import { useQuery, useMutation } from "@apollo/client/react";
 import { gql } from "@apollo/client";
-// import useMutations from "@apollo/client/react";
 
 const GET_USER = gql`
   query GetUser($nickname: String!) {

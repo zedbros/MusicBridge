@@ -58,39 +58,6 @@ router.post("/login", async (req, res) => {
 
     res.json({ token, nickname: user.nickname });
   })(req, res); // there was res, next in this parenthesis incase there is an error that occures here.
-  // const { nick_email, password } = req.body;
-
-  // if (!nick_email || !password)
-  //   return res.status(400).json({ error: "All fields are required." });
-
-  // try {
-  //   const db = getDB();
-  //   const users = db.collection("users");
-
-  //   const user = await users.findOne({
-  //       $or: [
-  //           {nickname: nick_email},
-  //           {email: nick_email}
-  //       ]
-  //   });
-    
-  //   if (!user)
-  //     return res.status(401).json({ error: "Invalid nickname or email." });
-
-  //   const match = await bcrypt.compare(password, user.password);
-  //   if (!match)
-  //     return res.status(401).json({ error: "Invalid password." });
-
-  //   const token = jwt.sign(
-  //     { id: user._id, nickname: user.nickname },
-  //     process.env.JWT_SECRET,
-  //     { expiresIn: "7d" }
-  //   );
-  //   res.json({ token, nickname: user.nickname });
-  // } catch (err) {
-  //   console.error(err);
-  //   res.status(500).json({ error: "Server error." });
-  // }
 });
 
 router.get("/user/:nickname", async (req, res) => {});
