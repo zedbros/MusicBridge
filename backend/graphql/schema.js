@@ -15,7 +15,21 @@ const typeDefs = gql`
     owner_nickname: String!
     profile_picture_id: String
     viewability: String!
-    songs: [String]
+    songs: [Song]
+  }
+
+  type Song {
+    name: String!
+    artist: String!
+    album: String!
+    duration: Int!
+    cover: String
+    spotifyId: String
+  }
+
+  type SongSearchResult {
+    available: Boolean!
+    song: Song
   }
 
   type Query {
@@ -25,6 +39,8 @@ const typeDefs = gql`
 
     getPlaylist(id: ID!): Playlist
     getUserPlaylists(nickname: String!): [Playlist]
+
+    searchSong(query: String!): SongSearchResult
   }
 
   type Mutation {
@@ -33,6 +49,18 @@ const typeDefs = gql`
     createPlaylist(name: String!, viewability: String!): Playlist
     updatePlaylist(id: ID!, name: String, viewability: String): Playlist
     deletePlaylist(id: ID!): Boolean
+
+    addSongToPlaylist(playlistId: ID!, song: SongInput!): Playlist
+    removeSongFromPlaylist(playlistId: ID!, spotifyId: String!): Playlist
+  }
+
+  input SongInput {
+    name: String!
+    artist: String!
+    album: String!
+    duration: Int!
+    cover: String
+    spotifyId: String!
   }
 `;
 

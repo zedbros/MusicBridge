@@ -1,6 +1,7 @@
 const { getDB } = require("../../db/MongoDB");
 const { ObjectId } = require("mongodb")
 
+const { searchSpotify } = require("../routes/spotify");
 
 function requireAuth(context) {
   if (!context.user) throw new Error("Not authenticated in require auth.");
@@ -41,7 +42,30 @@ const resolvers = {
       const playlist = await db.collection("playlists")
         .findOne({ _id: new ObjectId(id) });
       if (!playlist) throw new Error("Playlist not found.");
-      return { ...playlist, id: playlist._id.toString() };
+      return { 
+        ...playlist,
+        id: playlist._id.toString(),
+        songs: (playlist.songs ?? []).map(({ _id, ...s}) => s)
+      };
+    },
+
+    searchSong: async (_, { query }) => {
+      const [spotify] = await Promise.all( [searchSpotify(query)] );
+
+      // Must return a result for the song to be "available"
+      if (!spotify) return { available: false, song: null };
+
+      return {
+        available: true,
+        song: {
+          name: spotify.name,
+          artist: spotify.artist,
+          album: spotify.album,
+          duration: spotify.duration,
+          cover: spotify.cover,       // use Spotify's cover
+          spotifyId: spotify.spotifyId,
+        },
+      };
     },
   },
   Mutation: {
@@ -105,6 +129,48 @@ const resolvers = {
       requireOwner(context, playlist.owner_nickname);
       await db.collection("playlists").deleteOne({ _id: new ObjectId(id) });
       return true;
+    },
+
+    addSongToPlaylist: async (_, { playlistId, song }, context) => {
+      requireAuth(context);
+      const db = getDB();
+      const playlist = await db.collection("playlists")
+        .findOne({ _id: new ObjectId(playlistId) });
+      if (!playlist) throw new Error("Playlist not found.");
+      requireOwner(context, playlist.owner_nickname);
+
+      await db.collection("playlists").updateOne(
+        { _id: new ObjectId(playlistId) },
+        { $push: { songs: song } }
+      );
+      const updated = await db.collection("playlists")
+        .findOne({ _id: new ObjectId(playlistId) });
+      return {
+        ...updated,
+        id: updated._id.toString(),
+        songs: updated.songs.map(({_id, ...s}) => s),
+      };
+    },
+
+    removeSongFromPlaylist: async (_, { playlistId, spotifyId }, context) => {
+      requireAuth(context);
+      const db = getDB();
+      const playlist = await db.collection("playlists")
+        .findOne({ _id: new ObjectId(playlistId) });
+      if (!playlist) throw new Error("Playlist not found.");
+      requireOwner(context, playlist.owner_nickname);
+
+      await db.collection("playlists").updateOne(
+        { _id: new ObjectId(playlistId) },
+        { $pull: { songs: { spotifyId } } }
+      );
+      const updated = await db.collection("playlists")
+        .findOne({ _id: new ObjectId(playlistId) });
+      return {
+        ...updated,
+        id: updated._id.toString(),
+        songs: updated.songs.map(({ _id, ...s}) => s)
+      };
     },
   },
 };

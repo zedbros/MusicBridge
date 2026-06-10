@@ -13,7 +13,15 @@ const GET_USER = gql`
   query GetUser($nickname: String!) {
     getUser(nickname: $nickname) {
       nickname
+    }
+  }
+`;
+const GET_USER_PROFILE = gql`
+  query GetUser($nickname: String!) {
+    getUser(nickname: $nickname) {
+      nickname
       bio
+      genre
     }
   }
 `;
@@ -66,6 +74,33 @@ const UPDATE_PLAYLIST = gql`
 const DELETE_PLAYLIST = gql`
   mutation DeletePlaylist($id: ID!) {
     deletePlaylist(id: $id)
+  }
+`;
+
+const SEARCH_SONG = gql`
+  query SearchSong($query: String!) {
+    searchSong(query: $query) {
+      available
+      song {
+        name artist album duration cover spotifyId
+      }
+    }
+  }
+`;
+
+const ADD_SONG = gql`
+  mutation AddSongToPlaylist($playlistId: ID!, $song: SongInput!) {
+    addSongToPlaylist(playlistId: $playlistId, song: $song) {
+      id songs { name artist cover spotifyId }
+    }
+  }
+`;
+
+const REMOVE_SONG = gql`
+  mutation RemoveSongFromPlaylist($playlistId: ID!, $spotifyId: String!) {
+    removeSongFromPlaylist(playlistId: $playlistId, spotifyId: $spotifyId) {
+      id songs { name artist cover spotifyId }
+    }
   }
 `;
 
@@ -343,7 +378,7 @@ function UserHome() {
   const { nickname } = useParams();
   const isOwner = localStorage.getItem("nickname") === nickname
 
-  const { loading, error, data } = useQuery(GET_USER, {
+  const { loading, error, data } = useQuery(GET_USER_PROFILE, {
     variables: { nickname },
   });
   if (loading) return <p>Loading...</p>;
@@ -359,8 +394,8 @@ function UserHome() {
     <div>
       <h2 className='h2-user-welcome'>Welcome to <span className="user-welcome-nickname">{data.getUser.nickname}'s</span> page</h2>
       <img src="/src/res/smol_2B.png" width={100}/>
-      <p>Bio --- {data.getUser.bio}</p>
-      <p>Favourite genres ---</p>
+      <p>Bio | {data.getUser.bio}</p>
+      <p>Favourite genres | {data.getUser.genre}</p>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
           Edit page
@@ -384,7 +419,7 @@ function UserEdit() {
   const [updateProfile, { error }] = useMutation(UPDATE_PROFILE, {
     update(cache, { data: { updateProfile } }) {
       cache.writeQuery({
-        query: GET_USER,
+        query: GET_USER_PROFILE,
         variables: { nickname },
         data: { getUser: updateProfile },
       });
@@ -427,7 +462,7 @@ function UserEdit() {
         </div>
         <div>
           <label>Favourite genre</label>
-          <input value={genre} onChange={e => setGenre(e.target.value)} />
+          <textarea value={genre} onChange={e => setGenre(e.target.value)} />
         </div>
         <div>
           <label>Profile picture</label>
@@ -475,10 +510,10 @@ function UserEdit() {
 // }
 
 
-// TODO WHEN CLICK ON DELTE EVEN IF WE CANCEL OR ACTUALLY DELETE IT, PREVENT IT FROM GOING TO THE PLAYLIST PAGE..
-// JUST STAY HOME
-// TODO MAKE THEM ACTUALLY NOT APPEAR ON PUBLIC IF PRIVATE.. ONLY OWNER CAN SEE IT.
 function UserPlaylistList({ nickname }) {
+  // TODO WHEN CLICK ON DELTE EVEN IF WE CANCEL OR ACTUALLY DELETE IT, PREVENT IT FROM GOING TO THE PLAYLIST PAGE..
+  // JUST STAY HOME
+  // TODO MAKE THEM ACTUALLY NOT APPEAR ON PUBLIC IF PRIVATE.. ONLY OWNER CAN SEE IT.
   const isOwner = localStorage.getItem("nickname") === nickname
   const { loading, error, data } = useQuery(GET_USER_PLAYLISTS, {
     variables: { nickname },
@@ -503,7 +538,8 @@ function UserPlaylistList({ nickname }) {
             {pl.name}
           </span>
           {isOwner && (
-            <button onClick={async () => {
+            <button onClick={async (e) => {
+              e.stopPropagation();
               if (window.confirm(`Delete "${pl.name}"?`)){
                 await deletePlaylist({ variables: { id: pl.id } });
               }
@@ -616,6 +652,7 @@ function PlaylistEdit() {
         <button type="submit" disabled={saving}>Save</button>
       </form>
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Cancel</button>
+      <SongSearch playlistId={id} nickname={nickname}/>
     </>
   );
 }
@@ -623,8 +660,20 @@ function PlaylistEdit() {
 function PlaylistView() {
   const { nickname, id } = useParams();
   const isOwner = localStorage.getItem("nickname") === nickname;
+
+  const [removeSong] = useMutation(REMOVE_SONG, {
+    refetchQueries: [
+      { query: gql`query GetPlaylist($id: ID!) { getPlaylist(id: $id) { id songs { name artist album duration cover spotifyId } } }`, variables: { id } }
+    ],
+  });
+
   const { loading, error, data } = useQuery(
-    gql`query GetPlaylist($id: ID!) { getPlaylist(id: $id) { id name viewability profile_picture_id songs } }`,
+    gql`query GetPlaylist($id: ID!) { 
+      getPlaylist(id: $id) { 
+        id name viewability profile_picture_id 
+        songs { name artist album duration cover spotifyId }
+      } 
+    }`,
     { variables: { id } }
   );
 
@@ -643,14 +692,86 @@ function PlaylistView() {
       )}
       <h1>{pl.name}</h1>
       <p>{pl.viewability}</p>
-      <p>Songs list: (gonna add the API here)</p>
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
+      <br></br>
+      <br></br>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/playlists/${id}/edit`}>
           Edit playlist
         </button>
       )}
-      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
+      <div>
+        {pl.songs?.length === 0 && <p>No songs yet.</p>}
+        {pl.songs?.map(song => (
+          <div key={song.spotifyId} style={{ display: "flex", gap: "12px", alignItems: "center" }} onClick={(e) => window.open(`https://open.spotify.com/track/${song.spotifyId}`, "_blank")}>
+            <img src={song.cover} width={50} height={50} />
+            <div>
+              <strong>{song.name} by {song.artist}</strong>
+            </div>
+            {isOwner && (
+              <button onClick={(e) => {e.stopPropagation(); removeSong({ variables: { playlistId: id, spotifyId: song.spotifyId } })}}>
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
     </>
+  );
+}
+
+function SongSearch({ playlistId, nickname }) {
+  const [query, setQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(null);
+
+  const { loading, data } = useQuery(SEARCH_SONG, {
+    variables: { query: searchQuery },
+    skip: !searchQuery,         // don't run until user submits
+  });
+
+  const [addSong] = useMutation(ADD_SONG, {
+    refetchQueries: [{ query: GET_USER_PLAYLISTS, variables: { nickname } }],
+  });
+
+  const result = data?.searchSong;
+
+  return (
+    <div>
+      <h3>Add a song</h3>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search for a song..."
+      />
+      <button onClick={() => setSearchQuery(query)} disabled={!query}>
+        Search
+      </button>
+
+      {loading && <p>Searching...</p>}
+
+      {result && !result.available && (
+        <p>This song is not available on Spotify.</p>
+      )}
+
+      {result?.available && result.song && (
+        <>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <img src={result.song.cover} width={50} height={50} />
+          <div>
+            <strong>{result.song.name}</strong>
+            <p>{result.song.artist} — {result.song.album}</p>
+          </div>
+          <button onClick={() => {
+            const { __typename, ...songData } = result.song;
+            addSong({ variables: { playlistId, song: songData } });
+          }}>
+            + Add
+          </button>
+        </div>
+          <button onClick={() => window.location.href = `/user/${nickname}/playlists/${playlistId}`}>Back</button>
+          </>
+      )}
+    </div>
   );
 }
 

@@ -1,47 +1,51 @@
-# Music_Bridge
-This project's goal is to build a web app, where anyone can create, modify and publish playlist that are compatible with both Apple Music and Spotify.
+# MusicBridge
+This project's original goal was to build a web app, where anyone can create, modify and publish playlists that are compatible with both Apple Music and Spotify.
+
+However apple requires a yearly payment for API requests, and so it was decided with great regret that it will only be a web app, where users can sign up, create and customize their profile and add playlists.
 
 The context of this project is the `Full Stack Web Developpment` course given at the HES-SO_Valais_Wallis by Mr. Guillaume Zufferey.
 
-# BRIDGE BETWEEN APPLE MUSIC AND SPOTIFY PLAYLISTS
+# Setup
 
-- Apple Music API            (I already have an account) 
+## Start backend sever
+Create the database (already seeded for demo purposes)\
+`node backend/server.js`
 
-- Spotify API                     (Have a friend who has a spare family slot) 
+## Start backend sever
+`cd frontend`\
+To launch locally\
+`npm run dev`
+To launch on an open port\
+`npm run dev-remote`
 
-- Create commun playlists for both platforms (bridge application) 
- 
 
-## Requierements:
-
+## Project requirements:
 ### Thème libre, contraintes fonctionnelles et technologiques  
-
 #### Login/Logout
-- User accounts that have their playlists (public/unlisted/
-private).
+- User accounts that have their playlists (public/private).
 
 - They can create, delete, modify them.
 - They can view other user playlists based on the viewability.
-- Can create links for theiry playlists as read only.
+- Can create links for theiry playlists as read only (unique url for each user and playlist).
 
 #### Stockage de données (base de données) 
-- Accounts -> user_id, nickname, pfp, fav_genre, playlists_fk 
+- Accounts -> _id, nickname, email, bio, fav_genre, pfp, playlists_list 
 
 - Playlists -> PL_id, name, pfp, songs_fk, viewability(pub/unl/pri) 
 
-- ![](notes/1/db_diagram.png)
+<!-- ![](notes/1/db_diagram.png) -->
 
 #### Architecture client/serveur, transport des données avec GraphQL 
 - Viewing, modifying and adding playlists. 
 
 #### Accès à des données externes via une API (en principe REST) 
-- Songs: (only songs that are both on apple music and Spotify can be added (otherwise not much point))  
-
-- through api gather -> pfp, name, album, artist, genre, duration 
+- Spotify API
+- Create playlists with songs available on Spotify
+- Through API gather -> pfp, name, album, artist, duration 
 
 ### Frameworks et outils 
 
-##### Front-End: Vite.js, React, Material UI, HTML, CSS 
+##### Front-End: Vite.js, React, HTML, CSS 
 Profiles, playlist modification and user search menus. 
 
 ##### Back-End: Express.js, Node.js, GraphQL 
@@ -50,24 +54,8 @@ Handles the interface updates, the entire DB and API calls.
 ##### Déploiement avec Netlify 
 For sure. 
 
-##### APIs
-Spotify and Apple Music. 
-
-
-# Tutorial
-
-## Mongo DB
-Create the database (already seeded for demo purposes)\
-`cd db`\
-`sudo docker compose up -d`
-
-To access the docker mongo shell\
-`sudo docker exec -it MONGO_CONTAINER bash`
-
-
-# Exam test test.js
+# Notes
+#### Exam test test.js
 in backend/ => run `node test.js` => new terminal => `curl -X GET http://localhost:3000/test` => check node terminal for 3 logs.
-
-
-# Authentication
+#### Auth tutorial
 Got a great tutorial from this website: `https://supertokens.com/blog/building-a-login-screen-with-react-and-bootstrap`
