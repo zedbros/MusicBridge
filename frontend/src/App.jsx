@@ -18,16 +18,54 @@ const GET_USER = gql`
   }
 `;
 const UPDATE_PROFILE = gql`
-  mutation UpdateProfile($bio: String!) {
-    updateProfile(bio: $bio) {
+  mutation UpdateProfile($bio: String, $genre: String, $profile_picture_id: String) {
+    updateProfile(bio: $bio, genre: $genre, profile_picture_id: $profile_picture_id) {
       nickname
       bio
+      genre
+      profile_picture_id
     }
   }
 `;
 const GET_ALL_USERS = gql`
   query {
     getAllUsers { nickname }
+  }
+`;
+
+const GET_USER_PLAYLISTS = gql`
+  query GetUserPlaylists($nickname: String!) {
+    getUserPlaylists(nickname: $nickname) {
+      id
+      name
+      viewability
+      profile_picture_id
+    }
+  }
+`;
+
+const CREATE_PLAYLIST = gql`
+  mutation CreatePlaylist($name: String!, $viewability: String!) {
+    createPlaylist(name: $name, viewability: $viewability) {
+      id
+      name
+    }
+  }
+`;
+
+const UPDATE_PLAYLIST = gql`
+  mutation UpdatePlaylist($id: ID!, $name: String, $viewability: String) {
+    updatePlaylist(id: $id, name: $name, viewability: $viewability) {
+      id
+      name
+      viewability
+    }
+  }
+`;
+
+const DELETE_PLAYLIST = gql`
+  mutation DeletePlaylist($id: ID!) {
+    deletePlaylist(id: $id)
   }
 `;
 
@@ -41,6 +79,11 @@ function App() {
       <Route path="/user/:nickname/home" element={<UserHome />} />
       <Route path="/user/:nickname/edit" element={<ProtectedRoute><UserEdit /></ProtectedRoute>} />
       <Route path="/four" element={<Four />} />
+
+      {/* <Route path="/user/:nickname/playlists" element={<UserPlaylists />} /> */}
+      <Route path="/user/:nickname/playlists/new" element={<ProtectedRoute><PlaylistNew /></ProtectedRoute>} />
+      <Route path="/user/:nickname/playlists/:id" element={<PlaylistView />} />
+      <Route path="/user/:nickname/playlists/:id/edit" element={<ProtectedRoute><PlaylistEdit /></ProtectedRoute>} />
     </Routes>
   )
 }
@@ -48,6 +91,7 @@ function App() {
 function Welcome() {
   return (
     <>
+      <h1 style={{ fontSize: "xx-large", color: "purple" }}>Welcome to</h1>
       <h1>Music Bridge</h1>
       <div className="icon">
         <a>
@@ -74,11 +118,13 @@ function SignUp(){
     const newErrors = {};
     if (!email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+    else if (email.length > 40) newErrors.email = "Email is too long (>30)"
 
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
 
     if (!nickname) newErrors.nickname = 'Nickname is required';
+    else if (nickname.length > 20) newErrors.nickname = "Nickname is too long (>20)"
 
     return newErrors;
   };
@@ -186,7 +232,7 @@ function Login(){
 
   const validateForm = () => {
     const newErrors = {};
-    if (!nick_email) newErrors.nick_email = 'Email or nickname is required';
+    if (!nick_email) newErrors.nick_email = 'Email or Nickname is required';
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 3) newErrors.password = 'Password must be at least 3 characters';
     return newErrors;
@@ -230,10 +276,10 @@ function Login(){
         <h2 className="login-title">Login</h2>
         <Form onSubmit={handleSubmit} className="login-form">
           <Form.Group className="login-box" controlId="formBasicEmail">
-            <Form.Label>nickname or email</Form.Label>
+            <Form.Label>Email or nickname</Form.Label>
             <Form.Control className='login-text-box'
               type="string"
-              placeholder="Enter nickname or email"
+              placeholder="Enter Email or nickname"
               value={nick_email}
               onChange={(e) => setNickEmail(e.target.value)}
               isInvalid={!!errors.nick_email}
@@ -277,9 +323,9 @@ function Home() {
 
   return (
     <>
+      <h1 style={{ fontSize: "xx-large", color: "purple" }}>Homepage</h1>
       <h1>Music Bridge</h1>
       <img className="logo" onClick={event => window.location.href='/'} src="src/res/musicBridgeIdeaIcon.jpg"/>
-      <h3>homepage</h3>
       <div className="home-users">
         {data.getAllUsers.map(user => (
           <div className="home-user-box" key={user.nickname}
@@ -300,7 +346,6 @@ function UserHome() {
   const { loading, error, data } = useQuery(GET_USER, {
     variables: { nickname },
   });
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error loading profile: </p>;
 
@@ -312,20 +357,18 @@ function UserHome() {
       </a><br></br>
     </header>
     <div>
-      <h2>Welcome to {data.getUser.nickname}'s page</h2>
+      <h2 className='h2-user-welcome'>Welcome to <span className="user-welcome-nickname">{data.getUser.nickname}'s</span> page</h2>
       <img src="/src/res/smol_2B.png" width={100}/>
       <p>Bio --- {data.getUser.bio}</p>
       <p>Favourite genres ---</p>
-      <button onClick={() => window.location.href=`/user/${nickname}/playlists`}>
-          Playlists
-      </button>
-      <br></br>
-      <br></br>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
-          Edit my page
+          Edit page
         </button>
       )}
+      <hr />
+      <h2>Playlists</h2>
+      <UserPlaylistList nickname={nickname} />
     </div>
     </>
   );
@@ -334,9 +377,11 @@ function UserHome() {
 function UserEdit() {
   const { nickname } = useParams();
   const [bio, setBio] = useState("");
-    // re-runs GET_USER to update the page after the mutation is accepted
-    // this is for the reactives queries and mutations
-  const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE, {
+  const [genre, setGenre] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const [updateProfile, { error }] = useMutation(UPDATE_PROFILE, {
     update(cache, { data: { updateProfile } }) {
       cache.writeQuery({
         query: GET_USER,
@@ -346,29 +391,269 @@ function UserEdit() {
     }
   });
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error loading profile: </p>;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await updateProfile({ variables: { bio } });
-    // console.log("Bio updated successfully")
-    window.location.href = `/user/${localStorage.getItem("nickname")}/home`;
+    setSaving(true);
+    try {
+      let profile_picture_id = undefined;
+
+      // Upload image first if one was selected
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        const res = await fetch("/api/images/upload", {
+          method: "POST",
+          headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: formData,
+        });
+        const data = await res.json();
+        profile_picture_id = data.id;
+      }
+
+      await updateProfile({ variables: { bio, genre, profile_picture_id } });
+      window.location.href = `/user/${nickname}/home`;
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <>
-      <div>
-        <h1>Edit your page, {nickname}</h1>
-      </div>
+      <h1>Edit your page, {nickname}</h1>
       <form onSubmit={handleSubmit}>
-        <textarea value={bio} onChange={e => setBio(e.target.value)} />
-        <button type="submit" disabled={loading}>Save</button>
-        {error && <p>{error.message}</p>}
+        <div>
+          <label>Bio</label>
+          <textarea value={bio} onChange={e => setBio(e.target.value)}/>
+        </div>
+        <div>
+          <label>Favourite genre</label>
+          <input value={genre} onChange={e => setGenre(e.target.value)} />
+        </div>
+        <div>
+          <label>Profile picture</label>
+          <input type="file" accept="image/*"
+            onChange={e => setImageFile(e.target.files[0])} />
+        </div>
+        {error && <Alert variant="danger">{error.message}</Alert>}
+        <button type="submit" disabled={saving}>Save</button>
       </form>
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Cancel</button>
+
+      <hr />
+      <h2>Your playlists</h2>
+      <button onClick={() => window.location.href = `/user/${nickname}/playlists/new`}>
+        + New playlist
+      </button>
+      <UserPlaylistList nickname={nickname} />
     </>
   );
 }
+
+// function UserPlaylists() {
+//   const { nickname } = useParams();
+//   const isOwner = localStorage.getItem("nickname") === nickname;
+//   const { loading, error, data } = useQuery(GET_USER_PLAYLISTS, {
+//     variables: { nickname },
+//   });
+
+//   if (loading) return <p>Loading...</p>;
+//   if (error) return <p>Error loading playlists.</p>;
+
+//   return (
+//     <>
+//       <img className="logo" onClick={event => window.location.href='/home'} src="/src/res/musicBridgeIdeaIcon.jpg"/>
+//       <h1>{nickname}'s playlists</h1>
+//       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
+//       {isOwner && (
+//         <button onClick={() => window.location.href = `/user/${nickname}/playlists/new`}>
+//           + New playlist
+//         </button>
+//       )}
+//       <UserPlaylistList nickname={nickname} />
+//     </>
+//   );
+// }
+
+
+// TODO WHEN CLICK ON DELTE EVEN IF WE CANCEL OR ACTUALLY DELETE IT, PREVENT IT FROM GOING TO THE PLAYLIST PAGE..
+// JUST STAY HOME
+// TODO MAKE THEM ACTUALLY NOT APPEAR ON PUBLIC IF PRIVATE.. ONLY OWNER CAN SEE IT.
+function UserPlaylistList({ nickname }) {
+  const isOwner = localStorage.getItem("nickname") === nickname
+  const { loading, error, data } = useQuery(GET_USER_PLAYLISTS, {
+    variables: { nickname },
+  });
+  const [deletePlaylist] = useMutation(DELETE_PLAYLIST, {
+    refetchQueries: [{ query: GET_USER_PLAYLISTS, variables: { nickname } }],
+  });
+
+  if (loading) return <p>Loading playlists...</p>;
+  if (error) return <p>Error loading playlists.</p>;
+
+  return (
+    <>
+    <div>
+      {data.getUserPlaylists.map(pl => (
+        <div className="home-playlist-box" key={pl.id} onClick={() => window.location.href=`/user/${nickname}/playlists/${pl.id}`}>
+          {pl.profile_picture_id && (
+            <img src={`/api/images/${pl.profile_picture_id}`} width={40} height={40}
+              style={{ objectFit: "cover", borderRadius: "4px" }} />
+          )}
+          <span>
+            {pl.name}
+          </span>
+          {isOwner && (
+            <button onClick={async () => {
+              if (window.confirm(`Delete "${pl.name}"?`)){
+                await deletePlaylist({ variables: { id: pl.id } });
+              }
+            }}
+            style={{height: "40px"}}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+    </>
+  );
+}
+
+function PlaylistNew() {
+  const { nickname } = useParams();
+  const [name, setName] = useState("");
+  const [viewability, setViewability] = useState("public");
+
+  const [createPlaylist, { loading, error }] = useMutation(CREATE_PLAYLIST, {
+    refetchQueries: [{ query: GET_USER_PLAYLISTS, variables: { nickname } }],
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { data } = await createPlaylist({ variables: { name, viewability } });
+    window.location.href = `/user/${nickname}/playlists/${data.createPlaylist.id}/`;
+  };
+
+  return (
+    <>
+      <h1>New playlist</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Name</label>
+          <input value={name} onChange={e => setName(e.target.value)} required />
+        </div>
+        <div>
+          <label>Visibility</label>
+          <select value={viewability} onChange={e => setViewability(e.target.value)}>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+        {error && <Alert variant="danger">{error.message}</Alert>}
+        <button type="submit" disabled={loading}>Create</button><br></br>
+      </form>
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Cancel</button>
+    </>
+  );
+}
+
+function PlaylistEdit() {
+  const { nickname, id } = useParams();
+  const [name, setName] = useState("");
+  const [viewability, setViewability] = useState("public");
+  const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const [updatePlaylist, { error }] = useMutation(UPDATE_PLAYLIST, {
+    refetchQueries: [{ query: GET_USER_PLAYLISTS, variables: { nickname } }],
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      let profile_picture_id = undefined;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        const res = await fetch("/api/images/upload", {
+          method: "POST",
+          headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: formData,
+        });
+        const data = await res.json();
+        profile_picture_id = data.id;
+      }
+      await updatePlaylist({ variables: { id, name, viewability, profile_picture_id } });
+      window.location.href = `/user/${nickname}/playlists/${id}`;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <h1>Edit playlist</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Name</label>
+          <input value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div>
+          <label>Visibility</label>
+          <select value={viewability} onChange={e => setViewability(e.target.value)}>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+        <div>
+          <label>Playlist picture</label>
+          <input type="file" accept="image/*"
+            onChange={e => setImageFile(e.target.files[0])} />
+        </div>
+        {error && <Alert variant="danger">{error.message}</Alert>}
+        <button type="submit" disabled={saving}>Save</button>
+      </form>
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Cancel</button>
+    </>
+  );
+}
+
+function PlaylistView() {
+  const { nickname, id } = useParams();
+  const isOwner = localStorage.getItem("nickname") === nickname;
+  const { loading, error, data } = useQuery(
+    gql`query GetPlaylist($id: ID!) { getPlaylist(id: $id) { id name viewability profile_picture_id songs } }`,
+    { variables: { id } }
+  );
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error loading playlist.</p>;
+
+  // const edit_or_home_dir = isOwner ? "edit" : "home";
+
+  const pl = data.getPlaylist;
+
+  return (
+    <>
+      {pl.profile_picture_id && (
+        <img src={`/api/images/${pl.profile_picture_id}`} width={120} height={120}
+          style={{ objectFit: "cover", borderRadius: "8px" }} />
+      )}
+      <h1>{pl.name}</h1>
+      <p>{pl.viewability}</p>
+      <p>Songs list: (gonna add the API here)</p>
+      {isOwner && (
+        <button onClick={() => window.location.href = `/user/${nickname}/playlists/${id}/edit`}>
+          Edit playlist
+        </button>
+      )}
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
+    </>
+  );
+}
+
 
 function ProtectedRoute({ children }) {
   const { nickname } = useParams();
