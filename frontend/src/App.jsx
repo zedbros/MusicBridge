@@ -403,11 +403,13 @@ function UserHome() {
     <div>
       <h2 className='h2-user-welcome'>Welcome to <span className="user-welcome-nickname">{data.getUser.nickname}'s</span> page</h2>
       {/* <img src="/src/res/smol_2B.png" width={100}/> */}
-      <img
-        src={`/api/images/${data.getUser.profile_picture_id}`}
-        width={100} height={100}
-        style={{ objectFit: "cover", borderRadius: "50%" }}
-      />
+      {data.getUser.profile_picture_id && (
+        <img
+          src={`/api/images/${data.getUser.profile_picture_id}`}
+          width={100} height={100}
+          style={{ objectFit: "cover", borderRadius: "50%" }}
+        />
+      )}
       <p>Bio | {data.getUser.bio}</p>
       <p>Favourite genres | {data.getUser.genre}</p>
       {isOwner && (
@@ -728,10 +730,10 @@ function PlaylistView() {
   return (
     <>
       <h1>{pl.name}</h1>
-      {/* {pl.profile_picture_id && ( */}
+      {pl.profile_picture_id && (
         <img src={`/api/images/${pl.profile_picture_id}`} width={50} height={50}
           style={{ objectFit: "cover", borderRadius: "8px" }} />
-      {/* )} */}
+       )} 
       <p>Status: {pl.viewability}</p>
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>

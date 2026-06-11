@@ -7,16 +7,18 @@ The context of this project is the `Full Stack Web Developpment` course given at
 
 # Setup
 
-## Start backend sever
-Create the database (already seeded for demo purposes)\
+## Start backend server
 `node backend/server.js`
 
-## Start backend sever
+## Start backend server
 `cd frontend`\
 To launch locally\
 `npm run dev`
 To launch on an open port\
 `npm run dev-remote`
+
+## Setup mongodb validations
+`node db/setupValidation.js`    
 
 ## Run tests
 `npm test`

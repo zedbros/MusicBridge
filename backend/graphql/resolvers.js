@@ -90,7 +90,7 @@ const resolvers = {
       const result = await db.collection("playlists").insertOne({
         name,
         owner_nickname: context.user.nickname,
-        profile_picture_id: null,
+        // profile_picture_id: null,
         viewability,
         songs: [],
       });
