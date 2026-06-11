@@ -62,14 +62,14 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // res.cookie("token", token, {
-    //   httpOnly: true,
-    //   secure: false, // HTTP only if false
-    //   sameSite: "lax",
-    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-    // });
-    // res.json({ nickname });
-    res.json({ token, nickname: user.nickname });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // HTTP only if false
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    });
+    res.json({ nickname: user.nickname });
+    // res.json({ token, nickname: user.nickname });
   })(req, res); // there was res, next in this parenthesis incase there is an error that occures here.
 });
 

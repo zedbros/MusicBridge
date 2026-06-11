@@ -18,6 +18,9 @@ To launch locally\
 To launch on an open port\
 `npm run dev-remote`
 
+## Run tests
+`npm test`
+
 
 ## Project requirements:
 ### Thème libre, contraintes fonctionnelles et technologiques  

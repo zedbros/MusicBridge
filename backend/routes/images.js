@@ -27,6 +27,7 @@ router.get("/:id", async (req, res) => {
     if (!image) return res.status(404).json({ error: "Image not found." });
     const buffer = Buffer.from(image.data, "base64");
     res.set("Content-Type", image.mimetype);
+    res.set("Cache-Control", "public, max-age=86400");
     res.send(buffer);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch image." });

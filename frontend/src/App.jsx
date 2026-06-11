@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 import React from 'react'
@@ -22,6 +22,7 @@ const GET_USER_PROFILE = gql`
       nickname
       bio
       genre
+      profile_picture_id
     }
   }
 `;
@@ -48,6 +49,14 @@ const GET_USER_PLAYLISTS = gql`
       name
       viewability
       profile_picture_id
+    }
+  }
+`;
+
+const GET_PLAYLIST_EDIT = gql`
+  query GetPlaylist($id: ID!) {
+    getPlaylist(id: $id) {
+      id name viewability
     }
   }
 `;
@@ -393,7 +402,12 @@ function UserHome() {
     </header>
     <div>
       <h2 className='h2-user-welcome'>Welcome to <span className="user-welcome-nickname">{data.getUser.nickname}'s</span> page</h2>
-      <img src="/src/res/smol_2B.png" width={100}/>
+      {/* <img src="/src/res/smol_2B.png" width={100}/> */}
+      <img
+        src={`/api/images/${data.getUser.profile_picture_id}`}
+        width={100} height={100}
+        style={{ objectFit: "cover", borderRadius: "50%" }}
+      />
       <p>Bio | {data.getUser.bio}</p>
       <p>Favourite genres | {data.getUser.genre}</p>
       {isOwner && (
@@ -419,6 +433,14 @@ function UserEdit() {
   const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const { data } = useQuery(GET_USER_PROFILE, { variables: { nickname }});
+  useEffect(() => {
+    if (data?.getUser) {
+      setBio(data.getUser.bio || "");
+      setGenre(data.getUser.genre || "");
+    }
+  }, [data]);
+
   const [updateProfile, { error }] = useMutation(UPDATE_PROFILE, {
     update(cache, { data: { updateProfile } }) {
       cache.writeQuery({
@@ -441,7 +463,7 @@ function UserEdit() {
         formData.append("image", imageFile);
         const res = await fetch("/api/images/upload", {
           method: "POST",
-          headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+          credentials: "include",
           body: formData,
         });
         const data = await res.json();
@@ -528,10 +550,15 @@ function UserPlaylistList({ nickname }) {
   if (loading) return <p>Loading playlists...</p>;
   if (error) return <p>Error loading playlists.</p>;
 
+  // Only show private playlists to the owner
+  const visiblePlaylists = isOwner
+    ? data.getUserPlaylists
+    : data.getUserPlaylists.filter(pl => pl.viewability === "public");
+
   return (
     <>
     <div>
-      {data.getUserPlaylists.map(pl => (
+      {visiblePlaylists.map(pl => (
         <div className="home-playlist-box" key={pl.id} onClick={() => window.location.href=`/user/${nickname}/playlists/${pl.id}`}>
           {pl.profile_picture_id && (
             <img src={`/api/images/${pl.profile_picture_id}`} width={40} height={40}
@@ -604,6 +631,16 @@ function PlaylistEdit() {
   const [imageFile, setImageFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const { data } = useQuery(GET_PLAYLIST_EDIT, { variables: { id } });
+
+  // Pre-fill once data arrives
+  useEffect(() => {
+    if (data?.getPlaylist) {
+      setName(data.getPlaylist.name || "");
+      setViewability(data.getPlaylist.viewability || "public");
+    }
+  }, [data]);
+
   const [updatePlaylist, { error }] = useMutation(UPDATE_PLAYLIST, {
     refetchQueries: [{ query: GET_USER_PLAYLISTS, variables: { nickname } }],
   });
@@ -618,7 +655,8 @@ function PlaylistEdit() {
         formData.append("image", imageFile);
         const res = await fetch("/api/images/upload", {
           method: "POST",
-          headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+          // headers: { authorization: `Bearer ${localStorage.getItem("token")}` },
+          credentials: "include",
           body: formData,
         });
         const data = await res.json();
@@ -689,12 +727,12 @@ function PlaylistView() {
 
   return (
     <>
-      {pl.profile_picture_id && (
-        <img src={`/api/images/${pl.profile_picture_id}`} width={120} height={120}
-          style={{ objectFit: "cover", borderRadius: "8px" }} />
-      )}
       <h1>{pl.name}</h1>
-      <p>{pl.viewability}</p>
+      {/* {pl.profile_picture_id && ( */}
+        <img src={`/api/images/${pl.profile_picture_id}`} width={50} height={50}
+          style={{ objectFit: "cover", borderRadius: "8px" }} />
+      {/* )} */}
+      <p>Status: {pl.viewability}</p>
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>
       <br></br>
@@ -787,9 +825,9 @@ async function handleLogout() {
 function ProtectedRoute({ children }) {
   const { nickname } = useParams();
   const storedNickname = localStorage.getItem("nickname");
-  const token = localStorage.getItem("token");
+  // const token = localStorage.getItem("token");
 
-  if (!token || storedNickname !== nickname){
+  if (!storedNickname || storedNickname !== nickname){
     return <Navigate to="/four"replace />;
   }
   return children;
