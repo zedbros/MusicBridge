@@ -42,7 +42,7 @@ const resolvers = {
       const playlist = await db.collection("playlists")
         .findOne({ _id: new ObjectId(id) });
       if (!playlist) throw new Error("Playlist not found.");
-      return { 
+      return {
         ...playlist,
         id: playlist._id.toString(),
         songs: (playlist.songs ?? []).map(({ _id, ...s}) => s)
@@ -99,7 +99,7 @@ const resolvers = {
       return { ...playlist, id: playlist._id.toString() };
     },
 
-    updatePlaylist: async (_, { id, name, viewability }, context) => {
+    updatePlaylist: async (_, { id, name, viewability, profile_picture_id }, context) => {
       requireAuth(context);
       const db = getDB();
       const playlist = await db.collection("playlists")
@@ -110,6 +110,7 @@ const resolvers = {
       const updates = {};
       if (name !== undefined) updates.name = name;
       if (viewability !== undefined) updates.viewability = viewability;
+      if (profile_picture_id !== undefined) updates.profile_picture_id = profile_picture_id;
 
       await db.collection("playlists").updateOne(
         { _id: new ObjectId(id) },

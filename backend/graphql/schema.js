@@ -47,7 +47,7 @@ const typeDefs = gql`
     updateProfile(bio: String, genre: String, profile_picture_id: String): User
 
     createPlaylist(name: String!, viewability: String!): Playlist
-    updatePlaylist(id: ID!, name: String, viewability: String): Playlist
+    updatePlaylist(id: ID!, name: String, viewability: String, profile_picture_id: String): Playlist
     deletePlaylist(id: ID!): Boolean
 
     addSongToPlaylist(playlistId: ID!, song: SongInput!): Playlist

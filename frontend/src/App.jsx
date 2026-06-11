@@ -69,13 +69,13 @@ const CREATE_PLAYLIST = gql`
     }
   }
 `;
-
 const UPDATE_PLAYLIST = gql`
-  mutation UpdatePlaylist($id: ID!, $name: String, $viewability: String) {
-    updatePlaylist(id: $id, name: $name, viewability: $viewability) {
+  mutation UpdatePlaylist($id: ID!, $name: String, $viewability: String, $profile_picture_id: String) {
+    updatePlaylist(id: $id, name: $name, viewability: $viewability, profile_picture_id: $profile_picture_id) {
       id
       name
       viewability
+      profile_picture_id
     }
   }
 `;
@@ -731,8 +731,12 @@ function PlaylistView() {
     <>
       <h1>{pl.name}</h1>
       {pl.profile_picture_id && (
-        <img src={`/api/images/${pl.profile_picture_id}`} width={50} height={50}
-          style={{ objectFit: "cover", borderRadius: "8px" }} />
+        <img 
+        src={`/api/images/${pl.profile_picture_id}`}
+          
+          // width={300} height={300}
+          style={{ objectFit: "contain", maxWidth: "50%" }}
+        />
        )} 
       <p>Status: {pl.viewability}</p>
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
