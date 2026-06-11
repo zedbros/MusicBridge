@@ -742,6 +742,7 @@ function PlaylistView() {
       <br></br>
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>
+      <br></br>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/playlists/${id}/edit`}>
           Edit playlist
@@ -750,6 +751,7 @@ function PlaylistView() {
       <div>
         {pl.songs?.length === 0 && <p>No songs yet.</p>}
         {pl.songs?.map(song => (
+          <>
           <div key={song.spotifyId} style={{ display: "flex", gap: "12px", alignItems: "center" }} onClick={(e) => window.open(`https://open.spotify.com/track/${song.spotifyId}`, "_blank")}>
             <img src={song.cover} width={50} height={50} />
             <div>
@@ -761,6 +763,8 @@ function PlaylistView() {
               </button>
             )}
           </div>
+          <p></p>
+          </>
         ))}
       </div>
     </>
