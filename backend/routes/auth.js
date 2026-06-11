@@ -37,10 +37,16 @@ router.post("/signUp", async (req, res) => {
     );
 
     console.log("Account created successfully.");
-    res.json({ token, nickname });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // HTTP only if false
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    });
+    res.json({ nickname });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error." });
+    res.status(500).json({ error: "Sign up server error." });
   }
 });
 
@@ -56,6 +62,13 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: false, // HTTP only if false
+    //   sameSite: "lax",
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    // });
+    // res.json({ nickname });
     res.json({ token, nickname: user.nickname });
   })(req, res); // there was res, next in this parenthesis incase there is an error that occures here.
 });
@@ -65,6 +78,11 @@ router.get("/user/:nickname", async (req, res) => {});
 router.post("/user/:nickname/edit", requireAuth, async (req, res) => {
   if (req.user.nickname !== req.params.nickname)
     return res.status(403).json({ error: "Forbidden." });
+});
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out." });
 });
 
 function requireAuth(req, res, next){

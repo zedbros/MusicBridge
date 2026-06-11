@@ -184,7 +184,7 @@ function SignUp(){
       if (!res.ok) {
         setErrors({ server: data.error });
       } else {
-        localStorage.setItem("token", data.token);
+        // localStorage.setItem("token", data.token);
         localStorage.setItem("nickname", data.nickname);
 
         window.location.href = `/user/${nickname}/home` // where it redirects you to
@@ -293,7 +293,7 @@ function Login(){
       if (!res.ok) {
         setErrors({ server: data.error });
       } else {
-        localStorage.setItem("token", data.token);
+        // localStorage.setItem("token", data.token);
         localStorage.setItem("nickname", data.nickname);
 
         window.location.href = `/user/${data.nickname}/home` // where it redirects you to
@@ -397,9 +397,12 @@ function UserHome() {
       <p>Bio | {data.getUser.bio}</p>
       <p>Favourite genres | {data.getUser.genre}</p>
       {isOwner && (
+        <>
         <button onClick={() => window.location.href = `/user/${nickname}/edit`}>
           Edit page
         </button>
+        <button onClick={handleLogout}>Log out</button>
+        </>
       )}
       <hr />
       <h2>Playlists</h2>
@@ -775,6 +778,11 @@ function SongSearch({ playlistId, nickname }) {
   );
 }
 
+async function handleLogout() {
+  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  localStorage.removeItem("nickname");
+  window.location.href = "/Login";
+}
 
 function ProtectedRoute({ children }) {
   const { nickname } = useParams();

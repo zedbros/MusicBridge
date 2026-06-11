@@ -5,6 +5,11 @@ const { connectDB } = require("../db/MongoDB");
 const passport = require("./middleware/passport");
 
 const app = express();
+const cors = require("cors");
+app.use(cors({
+  origin: `http://localhost:${process.env.VITE_PORT || 5173}`,
+  credentials: true, // needed for cookies
+}));
 app.use(express.json());
 app.use(passport.initialize());
 
@@ -16,39 +21,11 @@ const { expressMiddleware } = require("@as-integrations/express5");
 const typeDefs = require("./graphql/schema");
 const resolvers = require("./graphql/resolvers");
 
-// TODO CHANGE THIS TO IMAGES.JS
-const multer = require("multer");
-const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } }); // limits to 5MB images
+const imageRoutes = require("./routes/images");
+app.use("/api/images", imageRoutes);
 
-app.post("/api/images/upload", upload.single("image"), async (req, res) => {
-  try {
-    const db = getDB();
-    const result = await db.collection("images").insertOne({
-      data: req.file.buffer.toString("base64"),
-      mimetype: req.file.mimetype,
-    });
-    res.json({ id: result.insertedId });
-  } catch (err) {
-    res.status(500).json({ error: "Image upload failed." });
-  }
-});
-
-app.get("/api/images/:id", async (req, res) => {
-  try {
-    const db = getDB();
-    const image = await db.collection("images")
-      .findOne({ _id: new ObjectId(req.params.id) });
-    if (!image) return res.status(404).json({ error: "Image not found." });
-
-    const buffer = Buffer.from(image.data, "base64");
-    res.set("Content-Type", image.mimetype);
-    res.send(buffer);
-  } catch (err) {
-    res.status(500).json({ error: "Could not fetch image." });
-  }
-});
-
-
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
 async function startServer(){
   try{
@@ -61,6 +38,10 @@ async function startServer(){
       context: async ({ req }) => {
         // Passport JWT validates the token and returns the user
         return new Promise((resolve) => {
+          const cookieToken = req.cookies?.token;
+          if (cookieToken) {
+            req.headers.authorization = `Bearer ${cookieToken}`;
+          }
           passport.authenticate("jwt", { session: false }, (err, user) => {
             if (err || !user) return resolve({ user: null });
             resolve({ user });

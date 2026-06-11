@@ -11,24 +11,31 @@ import { ApolloProvider } from "@apollo/client/react";
 import { setContext } from "@apollo/client/link/context";
 
 
-const httpLink = createHttpLink({ uri: "/graphql" });
-
-// Attaches the JWT token to every GraphQL request automatically
-const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem("token");
-  // console.log("The header token is : ", token)
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  };
+const httpLink = createHttpLink({
+  uri: "/graphql",
+  credentials: "include", // sends cookies with every requets
 });
-
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: httpLink,
   cache: new InMemoryCache(),
 });
+
+// // Attaches the JWT token to every GraphQL request automatically
+// const authLink = setContext((_, { headers }) => {
+//   const token = localStorage.getItem("token");
+//   // console.log("The header token is : ", token)
+//   return {
+//     headers: {
+//       ...headers,
+//       authorization: token ? `Bearer ${token}` : "",
+//     }
+//   };
+// });
+
+// const client = new ApolloClient({
+//   link: authLink.concat(httpLink),
+//   cache: new InMemoryCache(),
+// });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <ApolloProvider client={client}>
