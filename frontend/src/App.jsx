@@ -739,8 +739,8 @@ function PlaylistView() {
         />
        )} 
       {/* <p>Status: {pl.viewability}</p> */}
-      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>
+      <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>
       {isOwner && (
         <button onClick={() => window.location.href = `/user/${nickname}/playlists/${id}/edit`}>
