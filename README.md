@@ -51,13 +51,10 @@ To launch on an open port\
 ### Frameworks et outils 
 
 ##### Front-End: Vite.js, React, HTML, CSS 
-Profiles, playlist modification and user search menus. 
+Profiles, playlist modification and all users main menu.
 
 ##### Back-End: Express.js, Node.js, GraphQL 
 Handles the interface updates, the entire DB and API calls. 
-
-##### Déploiement avec Netlify 
-For sure. 
 
 # Notes
 #### Exam test test.js
