@@ -738,7 +738,7 @@ function PlaylistView() {
           style={{ objectFit: "contain", maxWidth: "50%" }}
         />
        )} 
-      <p>Status: {pl.viewability}</p>
+      {/* <p>Status: {pl.viewability}</p> */}
       <button onClick={() => window.location.href = `/user/${nickname}/home`}>Back</button>
       <br></br>
       <br></br>
