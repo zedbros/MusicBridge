@@ -23,6 +23,27 @@ To launch on an open port\
 ## Run tests
 `npm test`
 
+# Navigation tutorial
+The welcome page contains three buttons, the logo which brings you to the homepage where all users who have created an account appear.
+You can click on this even if you are not logged in so you visit as a guest.
+
+The sign up section requires a unique nickname and email. The email must be the right format. The password must be at least 3
+characters long.\
+Once signed up, you are redirected to your homepage, where only you can modify it and you can logout here too.
+
+The login requires either your email or nickname and your password and brings you to your homepage too.
+
+Editing your page means bio, favorite genres, profile picture and you can add create new playlists.
+
+When clicking on playlists, this brings you to the playlist's homepage. If you are the owner, you can edit it, meaning it's
+name, profile picture and you can add songs by searching for it first.
+
+If you click on the image of a song, it will bring you to the spotify page and start playing the song in a new window.
+
+When on your homepage, you can access the main homepage with all the users by clicking on the logo once again.\
+Here you can visit other peoples profiles and view their playlists. If they created a playlist that is private, only they can see it.
+
+That is all for the tour. I hope you like my app :)
 
 ## Project requirements:
 ### Thème libre, contraintes fonctionnelles et technologiques  
